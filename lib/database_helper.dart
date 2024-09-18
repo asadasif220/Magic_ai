@@ -55,8 +55,18 @@ class DatabaseHelper {
     return categoriesData.map((data) => WorkoutCategory.fromMap(data)).toList();
   }
 
+  Future<void> updateCategory(WorkoutCategory category) async {
+    final db = await database;
+    await db.update(
+      'workout_categories',
+      category.toMap(),
+      where: 'id = ?',
+      whereArgs: [category.id],
+    );
+  }
+
   Future<void> deleteCategory(String id) async {
-    final db = await instance.database;
+    final db = await database;
     await db.delete(
       'workout_categories',
       where: 'id = ?',
@@ -81,8 +91,18 @@ class DatabaseHelper {
     return exercisesData.map((data) => Exercise.fromMap(data)).toList();
   }
 
+  Future<void> updateExercise(Exercise exercise) async {
+    final db = await database;
+    await db.update(
+      'exercises',
+      exercise.toMap(),
+      where: 'id = ?',
+      whereArgs: [exercise.id],
+    );
+  }
+
   Future<void> deleteExercise(String id) async {
-    final db = await instance.database;
+    final db = await database;
     await db.delete(
       'exercises',
       where: 'id = ?',

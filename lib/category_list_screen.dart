@@ -19,6 +19,62 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     _loadCategories();
   }
 
+  void _editCategory(WorkoutCategory category) async {
+    final nameController = TextEditingController(text: category.name);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Category'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(labelText: 'Category Name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (nameController.text.isNotEmpty) {
+                category.name = nameController.text;
+                await DatabaseHelper.instance.updateCategory(category);
+                Navigator.pop(context);
+                _loadCategories();
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteCategory(WorkoutCategory category) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Category'),
+        content: Text('Are you sure you want to delete "${category.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await DatabaseHelper.instance.deleteCategory(category.id);
+      _loadCategories();
+    }
+  }
+
   void _loadCategories() async {
     final categories = await DatabaseHelper.instance.getCategories();
     setState(() {
@@ -62,25 +118,41 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Workout Tracker'),
+        backgroundColor: Colors.blue,
       ),
-      body: ListView.builder(
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          return ListTile(
-            title: Text(category.name),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ExerciseListScreen(category: category),
-                ),
-              );
-            },
-          );
-        },
-      ),
+      body: _categories.isEmpty
+          ? const Center(child: Text('No workout added'))
+          : ListView.builder(
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                return ListTile(
+                  title: Text(category.name),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _editCategory(category),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _deleteCategory(category),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ExerciseListScreen(category: category),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addCategory,
         child: const Icon(Icons.add),
