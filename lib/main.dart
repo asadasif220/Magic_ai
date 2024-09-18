@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'category_list_screen.dart';
+import 'package:magic_ai_app/helpers/database_helper.dart';
+import 'screens/category_list_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
+
+  final DatabaseHelper dbHelper = DatabaseHelper.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +19,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const CategoryListScreen(),
+      home: CategoryListScreen(
+        dbHelper: dbHelper,
+      ),
     );
   }
 }

@@ -5,8 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:magic_ai_app/data_models.dart' as _i5;
-import 'package:magic_ai_app/database_helper.dart' as _i3;
+import 'package:magic_ai_app/helpers/database_helper.dart' as _i3;
+import 'package:magic_ai_app/models/data_models.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
 import 'package:sqflite/sqflite.dart' as _i2;
@@ -93,6 +93,17 @@ class MockDatabaseHelper extends _i1.Mock implements _i3.DatabaseHelper {
       ) as _i4.Future<List<_i5.WorkoutCategory>>);
 
   @override
+  _i4.Future<void> updateCategory(_i5.WorkoutCategory? category) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateCategory,
+          [category],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
   _i4.Future<void> deleteCategory(String? id) => (super.noSuchMethod(
         Invocation.method(
           #deleteCategory,
@@ -127,6 +138,17 @@ class MockDatabaseHelper extends _i1.Mock implements _i3.DatabaseHelper {
         ),
         returnValue: _i4.Future<List<_i5.Exercise>>.value(<_i5.Exercise>[]),
       ) as _i4.Future<List<_i5.Exercise>>);
+
+  @override
+  _i4.Future<void> updateExercise(_i5.Exercise? exercise) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateExercise,
+          [exercise],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
   _i4.Future<void> deleteExercise(String? id) => (super.noSuchMethod(

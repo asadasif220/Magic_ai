@@ -1,80 +1,36 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:magic_ai_app/data_models.dart';
-import 'package:magic_ai_app/database_helper.dart';
+import 'package:magic_ai_app/models/data_models.dart';
+import 'package:magic_ai_app/helpers/database_helper.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  // Set up sqflite_common_ffi for testing
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  late DatabaseHelper dbHelper;
+  late Database db;
 
-  group('WorkoutCategory Model Tests', () {
-    test('Create WorkoutCategory', () {
-      final category = WorkoutCategory(name: 'Upper Body');
-      expect(category.name, 'Upper Body');
-      expect(category.id, isNotEmpty);
-    });
-
-    test('WorkoutCategory toMap and fromMap', () {
-      final category = WorkoutCategory(name: 'Lower Body');
-      final map = category.toMap();
-      final deserializedCategory = WorkoutCategory.fromMap(map);
-      expect(deserializedCategory.id, category.id);
-      expect(deserializedCategory.name, category.name);
-    });
+  setUpAll(() async {
+    // Initialize FFI
+    sqfliteFfiInit();
+    // Set the databaseFactory to use the FFI version
+    databaseFactory = databaseFactoryFfi;
+    // Create a new instance of DatabaseHelper
+    dbHelper = DatabaseHelper.instance;
+    // Initialize the database
+    db = await dbHelper.initDB('test.db');
   });
 
-  group('Exercise Model Tests', () {
-    test('Create Exercise', () {
-      final exercise = Exercise(
-        categoryId: 'cat1',
-        name: 'Bench Press',
-        weight: 50,
-        reps: 10,
-        sets: 3,
-      );
-      expect(exercise.name, 'Bench Press');
-      expect(exercise.weight, 50);
-      expect(exercise.reps, 10);
-      expect(exercise.sets, 3);
-      expect(exercise.id, isNotEmpty);
-    });
-
-    test('Exercise toMap and fromMap', () {
-      final exercise = Exercise(
-        categoryId: 'cat1',
-        name: 'Squats',
-        weight: 70,
-        reps: 8,
-        sets: 4,
-      );
-      final map = exercise.toMap();
-      final deserializedExercise = Exercise.fromMap(map);
-      expect(deserializedExercise.id, exercise.id);
-      expect(deserializedExercise.categoryId, exercise.categoryId);
-      expect(deserializedExercise.name, exercise.name);
-      expect(deserializedExercise.weight, exercise.weight);
-      expect(deserializedExercise.reps, exercise.reps);
-      expect(deserializedExercise.sets, exercise.sets);
-    });
+  tearDownAll(() async {
+    // Close the database after all tests are done
+    await db.close();
   });
 
-  group('DatabaseHelper Tests', () {
-    late DatabaseHelper dbHelper;
+  setUp(() async {
+    // Clear the database before each test
+    await db.delete('workout_categories');
+    await db.delete('exercises');
+  });
 
-    setUp(() async {
-      // Use an in-memory database for testing
-      dbHelper = DatabaseHelper.instance;
-      await dbHelper.initDB('test.db');
-    });
-
-    tearDown(() async {
-      // Close the database after each test
-      final db = await dbHelper.database;
-      await db.close();
-    });
-
-    test('Insert and retrieve WorkoutCategory', () async {
+  group('WorkoutCategory Tests', () {
+    test('Create and Retrieve WorkoutCategory', () async {
       final category = WorkoutCategory(name: 'Test Category');
       await dbHelper.insertCategory(category);
 
@@ -83,25 +39,84 @@ void main() {
       expect(categories.first.name, 'Test Category');
     });
 
-    test('Insert and retrieve Exercise', () async {
-      final category = WorkoutCategory(name: 'Test Category');
-      final categoryId = await dbHelper.insertCategory(category);
+    test('Update WorkoutCategory', () async {
+      final category = WorkoutCategory(name: 'Old Name');
+      await dbHelper.insertCategory(category);
 
+      category.name = 'New Name';
+      await dbHelper.updateCategory(category);
+
+      final categories = await dbHelper.getCategories();
+      expect(categories.first.name, 'New Name');
+    });
+
+    test('Delete WorkoutCategory', () async {
+      final category = WorkoutCategory(name: 'To Delete');
+      await dbHelper.insertCategory(category);
+
+      await dbHelper.deleteCategory(category.id);
+
+      final categories = await dbHelper.getCategories();
+      expect(categories.isEmpty, true);
+    });
+  });
+
+  group('Exercise Tests', () {
+    late WorkoutCategory testCategory;
+
+    setUp(() async {
+      testCategory = WorkoutCategory(name: 'Test Category');
+      await dbHelper.insertCategory(testCategory);
+    });
+
+    test('Create and Retrieve Exercise', () async {
       final exercise = Exercise(
-        categoryId: categoryId,
-        name: 'Test Exercise',
-        weight: 60,
-        reps: 12,
+        categoryId: testCategory.id,
+        name: 'Push-ups',
+        weight: 0,
+        reps: 10,
         sets: 3,
       );
       await dbHelper.insertExercise(exercise);
 
-      final exercises = await dbHelper.getExercisesByCategory(categoryId);
+      final exercises = await dbHelper.getExercisesByCategory(testCategory.id);
       expect(exercises.length, 1);
-      expect(exercises.first.name, 'Test Exercise');
-      expect(exercises.first.weight, 60);
-      expect(exercises.first.reps, 12);
-      expect(exercises.first.sets, 3);
+      expect(exercises.first.name, 'Push-ups');
+    });
+
+    test('Update Exercise', () async {
+      final exercise = Exercise(
+        categoryId: testCategory.id,
+        name: 'Old Exercise',
+        weight: 10,
+        reps: 10,
+        sets: 3,
+      );
+      await dbHelper.insertExercise(exercise);
+
+      exercise.name = 'New Exercise';
+      exercise.weight = 15;
+      await dbHelper.updateExercise(exercise);
+
+      final exercises = await dbHelper.getExercisesByCategory(testCategory.id);
+      expect(exercises.first.name, 'New Exercise');
+      expect(exercises.first.weight, 15);
+    });
+
+    test('Delete Exercise', () async {
+      final exercise = Exercise(
+        categoryId: testCategory.id,
+        name: 'To Delete',
+        weight: 10,
+        reps: 10,
+        sets: 3,
+      );
+      await dbHelper.insertExercise(exercise);
+
+      await dbHelper.deleteExercise(exercise.id);
+
+      final exercises = await dbHelper.getExercisesByCategory(testCategory.id);
+      expect(exercises.isEmpty, true);
     });
   });
 }

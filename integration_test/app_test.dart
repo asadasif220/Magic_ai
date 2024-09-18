@@ -7,36 +7,36 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('end-to-end test', () {
-    testWidgets('Add category, navigate to exercises, add exercise',
+    testWidgets('Create, update, and delete category and exercise',
         (tester) async {
       app.main();
       await tester.pumpAndSettle();
 
-      // Verify we're on the CategoryListScreen
-      expect(find.text('Workout Tracker'), findsOneWidget);
-
-      // Add a new category
+      // Create a new category
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'Test Category');
       await tester.tap(find.text('Add'));
       await tester.pumpAndSettle();
 
-      // Verify the new category is in the list
       expect(find.text('Test Category'), findsOneWidget);
 
-      // Navigate to the ExerciseListScreen
-      await tester.tap(find.text('Test Category'));
+      // Update the category
+      await tester.tap(find.byIcon(Icons.edit).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Updated Category');
+      await tester.tap(find.text('Update'));
       await tester.pumpAndSettle();
 
-      // Verify we're on the ExerciseListScreen
-      expect(find.text('Test Category'), findsOneWidget);
+      expect(find.text('Updated Category'), findsOneWidget);
 
-      // Add a new exercise
+      // Navigate to ExerciseListScreen
+      await tester.tap(find.text('Updated Category'));
+      await tester.pumpAndSettle();
+
+      // Create a new exercise
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
-
-      // Fill in exercise details
       await tester.enterText(
           find.widgetWithText(TextField, 'Exercise Name'), 'Test Exercise');
       await tester.enterText(
@@ -46,9 +46,41 @@ void main() {
       await tester.tap(find.text('Add'));
       await tester.pumpAndSettle();
 
-      // Verify the new exercise is in the list
       expect(find.text('Test Exercise'), findsOneWidget);
       expect(find.text('50kg, 10 reps, 3 sets'), findsOneWidget);
+
+      // Update the exercise
+      await tester.tap(find.byIcon(Icons.edit).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Exercise Name'), 'Updated Exercise');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Weight (kg)'), '60');
+      await tester.tap(find.text('Update'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Updated Exercise'), findsOneWidget);
+      expect(find.text('60kg, 10 reps, 3 sets'), findsOneWidget);
+
+      // Delete the exercise
+      await tester.tap(find.byIcon(Icons.delete).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Updated Exercise'), findsNothing);
+
+      // Navigate back to CategoryListScreen
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // Delete the category
+      await tester.tap(find.byIcon(Icons.delete).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Updated Category'), findsNothing);
     });
   });
 }

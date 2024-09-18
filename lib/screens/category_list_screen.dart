@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'exercise_list_screen.dart';
-import 'data_models.dart';
-import 'database_helper.dart';
+import '../models/data_models.dart';
+import '../helpers/database_helper.dart';
 
 class CategoryListScreen extends StatefulWidget {
-  const CategoryListScreen({Key? key}) : super(key: key);
+  final DatabaseHelper dbHelper;
+  const CategoryListScreen({Key? key, required this.dbHelper})
+      : super(key: key);
 
   @override
   _CategoryListScreenState createState() => _CategoryListScreenState();
@@ -76,7 +78,8 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   }
 
   void _loadCategories() async {
-    final categories = await DatabaseHelper.instance.getCategories();
+    // final categories = await DatabaseHelper.instance.getCategories();
+    final categories = await widget.dbHelper.getCategories();
     setState(() {
       _categories = categories;
     });
